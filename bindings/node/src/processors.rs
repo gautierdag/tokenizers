@@ -42,7 +42,7 @@ impl tk::PostProcessor for Processor {
 }
 
 #[napi]
-pub fn bert_processing(sep: (String, u32), cls: (String, u32)) -> Result<Processor> {
+pub fn bert_processing(sep: (String, u64), cls: (String, u64)) -> Result<Processor> {
   Ok(Processor {
     processor: Some(Arc::new(RwLock::new(
       tk::processors::bert::BertProcessing::new(sep, cls).into(),
@@ -52,8 +52,8 @@ pub fn bert_processing(sep: (String, u32), cls: (String, u32)) -> Result<Process
 
 #[napi]
 pub fn roberta_processing(
-  sep: (String, u32),
-  cls: (String, u32),
+  sep: (String, u64),
+  cls: (String, u64),
   trim_offsets: Option<bool>,
   add_prefix_space: Option<bool>,
 ) -> Result<Processor> {
@@ -86,7 +86,7 @@ pub fn byte_level_processing(trim_offsets: Option<bool>) -> Result<Processor> {
 pub fn template_processing(
   single: String,
   pair: Option<String>,
-  special_tokens: Option<Vec<(String, u32)>>,
+  special_tokens: Option<Vec<(String, u64)>>,
 ) -> Result<Processor> {
   let special_tokens = special_tokens.unwrap_or_default();
   let mut builder = tk::processors::template::TemplateProcessing::builder();

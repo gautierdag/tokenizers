@@ -81,26 +81,26 @@ impl JsEncoding {
   }
 
   #[napi]
-  pub fn get_length(&self) -> u32 {
+  pub fn get_length(&self) -> u64 {
     self
       .encoding
       .as_ref()
       .expect("Uninitialized Encoding")
       .get_ids()
-      .len() as u32
+      .len() as u64
   }
 
   #[napi]
-  pub fn get_n_sequences(&self) -> u32 {
+  pub fn get_n_sequences(&self) -> u64 {
     self
       .encoding
       .as_ref()
       .expect("Uninitialized Encoding")
-      .n_sequences() as u32
+      .n_sequences() as u64
   }
 
   #[napi]
-  pub fn get_ids(&self) -> Vec<u32> {
+  pub fn get_ids(&self) -> Vec<u64> {
     self
       .encoding
       .as_ref()
@@ -110,7 +110,7 @@ impl JsEncoding {
   }
 
   #[napi]
-  pub fn get_type_ids(&self) -> Vec<u32> {
+  pub fn get_type_ids(&self) -> Vec<u64> {
     self
       .encoding
       .as_ref()
@@ -120,7 +120,7 @@ impl JsEncoding {
   }
 
   #[napi]
-  pub fn get_attention_mask(&self) -> Vec<u32> {
+  pub fn get_attention_mask(&self) -> Vec<u64> {
     self
       .encoding
       .as_ref()
@@ -130,7 +130,7 @@ impl JsEncoding {
   }
 
   #[napi]
-  pub fn get_special_tokens_mask(&self) -> Vec<u32> {
+  pub fn get_special_tokens_mask(&self) -> Vec<u64> {
     self
       .encoding
       .as_ref()
@@ -150,19 +150,19 @@ impl JsEncoding {
   }
 
   #[napi]
-  pub fn get_offsets(&self) -> Vec<Vec<u32>> {
+  pub fn get_offsets(&self) -> Vec<Vec<u64>> {
     self
       .encoding
       .as_ref()
       .expect("Uninitialized Encoding")
       .get_offsets()
       .iter()
-      .map(|(a, b)| vec![*a as u32, *b as u32])
+      .map(|(a, b)| vec![*a as u64, *b as u64])
       .collect()
   }
 
   #[napi]
-  pub fn get_word_ids(&self) -> Vec<Option<u32>> {
+  pub fn get_word_ids(&self) -> Vec<Option<u64>> {
     self
       .encoding
       .as_ref()
@@ -172,18 +172,18 @@ impl JsEncoding {
   }
 
   #[napi]
-  pub fn char_to_token(&self, pos: u32, seq_id: Option<u32>) -> Option<u32> {
+  pub fn char_to_token(&self, pos: u64, seq_id: Option<u64>) -> Option<u64> {
     let seq_id = seq_id.unwrap_or(0);
     self
       .encoding
       .as_ref()
       .expect("Uninitialized Encoding")
       .char_to_token(pos as usize, seq_id as usize)
-      .map(|i| i as u32)
+      .map(|i| i as u64)
   }
 
   #[napi]
-  pub fn char_to_word(&self, pos: u32, seq_id: Option<u32>) -> Option<u32> {
+  pub fn char_to_word(&self, pos: u64, seq_id: Option<u64>) -> Option<u64> {
     let seq_id = seq_id.unwrap_or(0);
     self
       .encoding
@@ -193,7 +193,7 @@ impl JsEncoding {
   }
 
   #[napi]
-  pub fn pad(&mut self, length: u32, options: Option<PaddingOptions>) -> Result<()> {
+  pub fn pad(&mut self, length: u64, options: Option<PaddingOptions>) -> Result<()> {
     let params: tokenizers::PaddingParams = options.unwrap_or_default().try_into()?;
     self.encoding.as_mut().expect("Uninitialized Encoding").pad(
       length as usize,
@@ -208,8 +208,8 @@ impl JsEncoding {
   #[napi]
   pub fn truncate(
     &mut self,
-    length: u32,
-    stride: Option<u32>,
+    length: u64,
+    stride: Option<u64>,
     direction: Option<Either<String, JsTruncationDirection>>,
   ) -> Result<()> {
     let stride = stride.unwrap_or_default();
@@ -235,7 +235,7 @@ impl JsEncoding {
   }
 
   #[napi(ts_return_type = "[number, number] | null | undefined")]
-  pub fn word_to_tokens(&self, env: Env, word: u32, seq_id: Option<u32>) -> Result<Option<Array>> {
+  pub fn word_to_tokens(&self, env: Env, word: u64, seq_id: Option<u64>) -> Result<Option<Array>> {
     let seq_id = seq_id.unwrap_or(0);
 
     if let Some((a, b)) = self
@@ -245,15 +245,15 @@ impl JsEncoding {
       .word_to_tokens(word, seq_id as usize)
     {
       let mut arr = env.create_array(2)?;
-      arr.set(0, env.create_uint32(a as u32)?)?;
-      arr.set(1, env.create_uint32(b as u32)?)?;
+      arr.set(0, env.create_uint32(a as u64)?)?;
+      arr.set(1, env.create_uint32(b as u64)?)?;
       Ok(Some(arr))
     } else {
       Ok(None)
     }
   }
   #[napi(ts_return_type = "[number, number] | null | undefined")]
-  pub fn word_to_chars(&self, env: Env, word: u32, seq_id: Option<u32>) -> Result<Option<Array>> {
+  pub fn word_to_chars(&self, env: Env, word: u64, seq_id: Option<u64>) -> Result<Option<Array>> {
     let seq_id = seq_id.unwrap_or(0);
 
     if let Some((a, b)) = self
@@ -263,8 +263,8 @@ impl JsEncoding {
       .word_to_chars(word, seq_id as usize)
     {
       let mut arr = env.create_array(2)?;
-      arr.set(0, env.create_uint32(a as u32)?)?;
-      arr.set(1, env.create_uint32(b as u32)?)?;
+      arr.set(0, env.create_uint32(a as u64)?)?;
+      arr.set(1, env.create_uint32(b as u64)?)?;
       Ok(Some(arr))
     } else {
       Ok(None)
@@ -272,7 +272,7 @@ impl JsEncoding {
   }
 
   #[napi(ts_return_type = "[number, [number, number]] | null | undefined")]
-  pub fn token_to_chars(&self, env: Env, token: u32) -> Result<Option<Array>> {
+  pub fn token_to_chars(&self, env: Env, token: u64) -> Result<Option<Array>> {
     if let Some((_, (start, stop))) = self
       .encoding
       .as_ref()
@@ -280,8 +280,8 @@ impl JsEncoding {
       .token_to_chars(token as usize)
     {
       let mut offsets = env.create_array(2)?;
-      offsets.set(0, env.create_uint32(start as u32)?)?;
-      offsets.set(1, env.create_uint32(stop as u32)?)?;
+      offsets.set(0, env.create_uint32(start as u64)?)?;
+      offsets.set(1, env.create_uint32(stop as u64)?)?;
       Ok(Some(offsets))
     } else {
       Ok(None)
@@ -289,7 +289,7 @@ impl JsEncoding {
   }
 
   #[napi]
-  pub fn token_to_word(&self, token: u32) -> Result<Option<u32>> {
+  pub fn token_to_word(&self, token: u64) -> Result<Option<u64>> {
     if let Some((_, index)) = self
       .encoding
       .as_ref()
@@ -318,24 +318,24 @@ impl JsEncoding {
   }
 
   #[napi]
-  pub fn get_sequence_ids(&self) -> Vec<Option<u32>> {
+  pub fn get_sequence_ids(&self) -> Vec<Option<u64>> {
     self
       .encoding
       .as_ref()
       .expect("Uninitialized Encoding")
       .get_sequence_ids()
       .into_iter()
-      .map(|s| s.map(|id| id as u32))
+      .map(|s| s.map(|id| id as u64))
       .collect()
   }
 
   #[napi]
-  pub fn token_to_sequence(&self, token: u32) -> Option<u32> {
+  pub fn token_to_sequence(&self, token: u64) -> Option<u64> {
     self
       .encoding
       .as_ref()
       .expect("Uninitialized Encoding")
       .token_to_sequence(token as usize)
-      .map(|s| s as u32)
+      .map(|s| s as u64)
   }
 }

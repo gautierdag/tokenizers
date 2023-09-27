@@ -138,7 +138,7 @@ pub fn sequence_decoder(decoders: Vec<&Decoder>) -> Decoder {
 }
 
 #[napi]
-pub fn strip_decoder(content: String, left: u32, right: u32) -> Result<Decoder> {
+pub fn strip_decoder(content: String, left: u64, right: u64) -> Result<Decoder> {
   let content: char = content.chars().next().ok_or(Error::from_reason(
     "Expected non empty string for strip pattern",
   ))?;

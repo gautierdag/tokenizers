@@ -47,11 +47,11 @@ impl TryFrom<String> for PaddingDirection {
 #[napi(object)]
 #[derive(Default)]
 pub struct PaddingOptions {
-  pub max_length: Option<u32>,
+  pub max_length: Option<u64>,
   pub direction: Option<Either<String, PaddingDirection>>,
-  pub pad_to_multiple_of: Option<u32>,
-  pub pad_id: Option<u32>,
-  pub pad_type_id: Option<u32>,
+  pub pad_to_multiple_of: Option<u64>,
+  pub pad_id: Option<u64>,
+  pub pad_type_id: Option<u64>,
   pub pad_token: Option<String>,
 }
 
@@ -109,10 +109,10 @@ impl From<EncodeOptions> for EncodeOptionsDef {
 #[napi(object)]
 #[derive(Default)]
 pub struct TruncationOptions {
-  pub max_length: Option<u32>,
+  pub max_length: Option<u64>,
   pub strategy: Option<JsTruncationStrategy>,
   pub direction: Option<Either<String, JsTruncationDirection>>,
-  pub stride: Option<u32>,
+  pub stride: Option<u64>,
 }
 
 impl TryFrom<TruncationOptions> for tk::TruncationParams {
@@ -255,21 +255,21 @@ impl Tokenizer {
   }
 
   #[napi]
-  pub fn add_added_tokens(&mut self, tokens: Vec<&AddedToken>) -> u32 {
+  pub fn add_added_tokens(&mut self, tokens: Vec<&AddedToken>) -> u64 {
     let tokens: Vec<_> = tokens
       .into_iter()
       .map(|tok| (*tok).clone().into())
       .collect();
-    self.tokenizer.write().unwrap().add_tokens(&tokens) as u32
+    self.tokenizer.write().unwrap().add_tokens(&tokens) as u64
   }
 
   #[napi]
-  pub fn add_tokens(&mut self, tokens: Vec<String>) -> u32 {
+  pub fn add_tokens(&mut self, tokens: Vec<String>) -> u64 {
     let tokens: Vec<_> = tokens
       .into_iter()
       .map(|tok| tk::AddedToken::from(tok, false))
       .collect();
-    self.tokenizer.write().unwrap().add_tokens(&tokens) as u32
+    self.tokenizer.write().unwrap().add_tokens(&tokens) as u64
   }
 
   #[napi(ts_return_type = "Promise<JsEncoding>")]
@@ -312,7 +312,7 @@ impl Tokenizer {
   }
 
   #[napi(ts_return_type = "Promise<string>")]
-  pub fn decode(&self, ids: Vec<u32>, skip_special_tokens: bool) -> AsyncTask<DecodeTask> {
+  pub fn decode(&self, ids: Vec<u64>, skip_special_tokens: bool) -> AsyncTask<DecodeTask> {
     AsyncTask::new(DecodeTask {
       tokenizer: (*self).clone(),
       ids,
@@ -323,7 +323,7 @@ impl Tokenizer {
   #[napi(ts_return_type = "Promise<string[]>")]
   pub fn decode_batch(
     &self,
-    ids: Vec<Vec<u32>>,
+    ids: Vec<Vec<u64>>,
     skip_special_tokens: bool,
   ) -> AsyncTask<DecodeBatchTask> {
     AsyncTask::new(DecodeBatchTask {
@@ -370,7 +370,7 @@ impl Tokenizer {
   #[napi]
   pub fn set_truncation(
     &mut self,
-    max_length: u32,
+    max_length: u64,
     options: Option<TruncationOptions>,
   ) -> Result<()> {
     let mut options: tk::TruncationParams = if let Some(options) = options {
@@ -433,23 +433,23 @@ impl Tokenizer {
   }
 
   #[napi]
-  pub fn get_vocab(&self, with_added_tokens: Option<bool>) -> HashMap<String, u32> {
+  pub fn get_vocab(&self, with_added_tokens: Option<bool>) -> HashMap<String, u64> {
     let with_added_tokens = with_added_tokens.unwrap_or(true);
     self.tokenizer.read().unwrap().get_vocab(with_added_tokens)
   }
 
   #[napi]
-  pub fn get_vocab_size(&self, with_added_tokens: Option<bool>) -> u32 {
-    self.get_vocab(with_added_tokens).len() as u32
+  pub fn get_vocab_size(&self, with_added_tokens: Option<bool>) -> u64 {
+    self.get_vocab(with_added_tokens).len() as u64
   }
 
   #[napi]
-  pub fn id_to_token(&self, id: u32) -> Option<String> {
+  pub fn id_to_token(&self, id: u64) -> Option<String> {
     self.tokenizer.read().unwrap().id_to_token(id)
   }
 
   #[napi]
-  pub fn token_to_id(&self, token: String) -> Option<u32> {
+  pub fn token_to_id(&self, token: String) -> Option<u64> {
     self.tokenizer.read().unwrap().token_to_id(&token)
   }
 
@@ -477,8 +477,8 @@ impl Tokenizer {
   }
 
   #[napi]
-  pub fn running_tasks(&self) -> u32 {
-    std::sync::Arc::strong_count(&self.tokenizer) as u32
+  pub fn running_tasks(&self) -> u64 {
+    std::sync::Arc::strong_count(&self.tokenizer) as u64
   }
 
   #[napi]

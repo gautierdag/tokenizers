@@ -88,8 +88,8 @@ impl PreTokenizer {
       .map(|(s, (start, end), _)| -> Result<Array> {
         let mut arr = env.create_array(2)?;
         let mut offset = env.create_array(2)?;
-        offset.set(0, env.create_uint32(start as u32)?)?;
-        offset.set(1, env.create_uint32(end as u32)?)?;
+        offset.set(0, env.create_uint32(start as u64)?)?;
+        offset.set(1, env.create_uint32(end as u64)?)?;
         arr.set(0, env.create_string(s)?)?;
         arr.set(1, offset)?;
         Ok(arr)

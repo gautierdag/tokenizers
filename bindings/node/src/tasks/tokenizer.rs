@@ -40,7 +40,7 @@ impl Task for EncodeTask<'static> {
 
 pub struct DecodeTask {
   pub tokenizer: Tokenizer,
-  pub ids: Vec<u32>,
+  pub ids: Vec<u64>,
   pub skip_special_tokens: bool,
 }
 
@@ -102,7 +102,7 @@ impl Task for EncodeBatchTask<'static> {
 
 pub struct DecodeBatchTask {
   pub tokenizer: Tokenizer,
-  pub ids: Vec<Vec<u32>>,
+  pub ids: Vec<Vec<u64>>,
   pub skip_special_tokens: bool,
 }
 

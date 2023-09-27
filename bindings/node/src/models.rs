@@ -87,15 +87,15 @@ impl tk::Model for Model {
       .tokenize(sequence)
   }
 
-  fn token_to_id(&self, token: &str) -> Option<u32> {
+  fn token_to_id(&self, token: &str) -> Option<u64> {
     self.model.as_ref()?.read().unwrap().token_to_id(token)
   }
 
-  fn id_to_token(&self, id: u32) -> Option<String> {
+  fn id_to_token(&self, id: u64) -> Option<String> {
     self.model.as_ref()?.read().unwrap().id_to_token(id)
   }
 
-  fn get_vocab(&self) -> HashMap<String, u32> {
+  fn get_vocab(&self) -> HashMap<String, u64> {
     self
       .model
       .as_ref()
@@ -140,7 +140,7 @@ impl tk::Model for Model {
 #[derive(Default)]
 #[napi(object)]
 pub struct BpeOptions {
-  pub cache_capacity: Option<u32>,
+  pub cache_capacity: Option<u64>,
   pub dropout: Option<f64>,
   pub unk_token: Option<String>,
   pub continuing_subword_prefix: Option<String>,
@@ -181,7 +181,7 @@ impl BpeOptions {
 pub struct WordPieceOptions {
   pub unk_token: Option<String>,
   pub continuing_subword_prefix: Option<String>,
-  pub max_input_chars_per_word: Option<u32>,
+  pub max_input_chars_per_word: Option<u64>,
 }
 
 impl WordPieceOptions {
@@ -301,7 +301,7 @@ impl WordLevel {
 #[derive(Default)]
 #[napi(object)]
 pub struct UnigramOptions {
-  pub unk_id: Option<u32>,
+  pub unk_id: Option<u64>,
   pub byte_fallback: Option<bool>,
 }
 

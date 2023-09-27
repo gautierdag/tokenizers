@@ -12,7 +12,7 @@ use std::convert::TryInto;
 type SentencePiece = (String, f64);
 
 // A full sentence or word + it's count within the dataset
-type Sentence = (String, u32);
+type Sentence = (String, u64);
 
 fn digamma(mut x: f64) -> f64 {
     let mut result = 0.0;
@@ -50,9 +50,9 @@ pub struct UnigramTrainer {
     #[builder(default = "true")]
     pub show_progress: bool,
     #[builder(default = "8000")]
-    pub vocab_size: u32,
+    pub vocab_size: u64,
     #[builder(default = "2")]
-    pub n_sub_iterations: u32,
+    pub n_sub_iterations: u64,
     #[builder(default = "0.75")]
     pub shrinking_factor: f64,
     #[builder(default = "vec![]")]
@@ -68,7 +68,7 @@ pub struct UnigramTrainer {
     #[builder(default = "1_000_000")]
     seed_size: usize,
     #[builder(default = "HashMap::new()")]
-    words: HashMap<String, u32>,
+    words: HashMap<String, u64>,
 }
 
 impl Default for UnigramTrainer {
@@ -204,7 +204,7 @@ impl UnigramTrainer {
             .sum::<usize>()
             + sentences.len();
         let mut flat_string = String::with_capacity(total);
-        let mut all_chars: HashMap<char, u32> = HashMap::new();
+        let mut all_chars: HashMap<char, u64> = HashMap::new();
         let c_sentence_boundary = '\0';
         let k_sentence_boundary = '\0'.to_string();
         for (string, n) in sentences {
@@ -256,7 +256,7 @@ impl UnigramTrainer {
 
         // Fill seed_sentencepieces
         for (count, character) in sall_chars {
-            seed_sentencepieces.push((character.to_string(), count.into()));
+            seed_sentencepieces.push((character.to_string(), count as f64));
         }
 
         // sort by decreasing score
@@ -448,16 +448,16 @@ impl UnigramTrainer {
         }
     }
 
-    fn run_e_step(&self, model: &Unigram, sentences: &[Sentence]) -> (f64, u32, Vec<f64>) {
-        let all_sentence_freq: u32 = sentences.iter().map(|(_a, b)| *b).sum();
+    fn run_e_step(&self, model: &Unigram, sentences: &[Sentence]) -> (f64, u64, Vec<f64>) {
+        let all_sentence_freq: u64 = sentences.iter().map(|(_a, b)| *b).sum();
 
         let chunk_size = std::cmp::max(sentences.len() / current_num_threads(), 1);
-        let collected: (f64, u32, Vec<f64>) = sentences
+        let collected: (f64, u64, Vec<f64>) = sentences
             .maybe_par_chunks(chunk_size)
             .map(|sentences_chunk| {
                 let mut expected: Vec<f64> = vec![0.0; model.len()];
                 let mut objs: f64 = 0.0;
-                let mut ntokens: u32 = 0;
+                let mut ntokens: u64 = 0;
 
                 for (string, freq) in sentences_chunk {
                     let mut lattice = Lattice::from(string, model.bos_id, model.eos_id);
@@ -467,7 +467,7 @@ impl UnigramTrainer {
                     if z.is_nan() {
                         panic!("likelihood is NAN. Input sentence may be too long.");
                     }
-                    ntokens += lattice.viterbi().len() as u32;
+                    ntokens += lattice.viterbi().len() as u64;
                     objs -= z / (all_sentence_freq as f64);
                 }
                 (objs, ntokens, expected)
@@ -564,7 +564,7 @@ impl UnigramTrainer {
         let expected_updates = expected_loops * self.n_sub_iterations as usize;
         self.update_progress(&progress, expected_updates, "EM training");
         let required_chars = self.required_chars(&sentences);
-        if required_chars.len() as u32 > self.vocab_size {
+        if required_chars.len() as u64 > self.vocab_size {
             return Err(Box::new(UnigramTrainerError::VocabularyTooSmall));
         }
         let mut new_model = Unigram::from(pieces.clone(), Some(0), false)?;
@@ -631,7 +631,7 @@ impl Trainer for UnigramTrainer {
         S: AsRef<str> + Send,
         F: Fn(&str) -> Result<Vec<String>> + Sync,
     {
-        let words: Result<HashMap<String, u32>> = iterator
+        let words: Result<HashMap<String, u64>> = iterator
             .maybe_par_bridge()
             .map(|sequence| {
                 let words = process(sequence.as_ref())?;

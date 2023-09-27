@@ -11,7 +11,7 @@ use std::convert::TryInto;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 
-type TokenMap = HashMap<String, u32>;
+type TokenMap = HashMap<String, u64>;
 type Vocab = Vec<(String, f64)>;
 
 /// A `Unigram` model to encode sentences.
@@ -114,7 +114,7 @@ impl Unigram {
 
         let mut min_score = f64::INFINITY;
         for (id, (token, score)) in vocab.iter().enumerate() {
-            token_to_ids.insert(token.to_string(), id as u32);
+            token_to_ids.insert(token.to_string(), id as u64);
             let bytes: Vec<u8> = token.bytes().collect();
             builder.push(&bytes);
             if score < &min_score {
@@ -403,7 +403,7 @@ impl<'a> Iterator for UnigramIterator<'a> {
 impl Model for Unigram {
     type Trainer = UnigramTrainer;
 
-    fn get_vocab(&self) -> HashMap<String, u32> {
+    fn get_vocab(&self) -> HashMap<String, u64> {
         self.token_to_ids.clone()
     }
 
@@ -418,7 +418,7 @@ impl Model for Unigram {
         for string in str_tokens {
             let len = string.len();
             let offsets = (offset, offset + len);
-            let id: u32 = match self.token_to_ids.get(&string) {
+            let id: u64 = match self.token_to_ids.get(&string) {
                 Some(id) => *id,
                 None => {
                     if self.byte_fallback {
@@ -438,7 +438,7 @@ impl Model for Unigram {
                             continue;
                         }
                     }
-                    self.unk_id.ok_or(UnigramError::MissingUnkId)? as u32
+                    self.unk_id.ok_or(UnigramError::MissingUnkId)? as u64
                 }
             };
             offset += len;
@@ -447,11 +447,11 @@ impl Model for Unigram {
         Ok(tokens)
     }
 
-    fn token_to_id(&self, token: &str) -> Option<u32> {
+    fn token_to_id(&self, token: &str) -> Option<u64> {
         self.token_to_ids.get(token).copied()
     }
 
-    fn id_to_token(&self, id: u32) -> Option<String> {
+    fn id_to_token(&self, id: u64) -> Option<String> {
         self.vocab.get(id as usize).map(|item| item.0.clone())
     }
 

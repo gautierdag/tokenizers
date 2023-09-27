@@ -11,7 +11,7 @@ use wasm_bindgen::prelude::*;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
-pub fn tokenize(string: &str) -> Vec<u32> {
+pub fn tokenize(string: &str) -> Vec<u64> {
     let vocab: Vocab = vec![
         ("a".to_string(), 0),
         ("##b".to_string(), 1),

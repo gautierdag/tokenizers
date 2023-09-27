@@ -19,11 +19,11 @@ use crate::{AddedToken, Model, Result, Token, Trainer};
 /// Wraps a vocab mapping (ID -> token) to a struct that will be serialized in order
 /// of token ID, smallest to largest.
 struct OrderedVocabIter<'a> {
-    vocab_r: &'a HashMap<u32, String>,
+    vocab_r: &'a HashMap<u64, String>,
 }
 
 impl<'a> OrderedVocabIter<'a> {
-    fn new(vocab_r: &'a HashMap<u32, String>) -> Self {
+    fn new(vocab_r: &'a HashMap<u64, String>) -> Self {
         Self { vocab_r }
     }
 }
@@ -46,7 +46,7 @@ impl<'a> Serialize for OrderedVocabIter<'a> {
             });
             serializer.collect_map(iter)
         } else {
-            serializer.collect_map(std::iter::empty::<(&str, u32)>())
+            serializer.collect_map(std::iter::empty::<(&str, u64)>())
         };
 
         if !holes.is_empty() {
@@ -85,7 +85,7 @@ impl Model for ModelWrapper {
         }
     }
 
-    fn token_to_id(&self, token: &str) -> Option<u32> {
+    fn token_to_id(&self, token: &str) -> Option<u64> {
         match self {
             Self::WordLevel(t) => t.token_to_id(token),
             Self::WordPiece(t) => t.token_to_id(token),
@@ -94,7 +94,7 @@ impl Model for ModelWrapper {
         }
     }
 
-    fn id_to_token(&self, id: u32) -> Option<String> {
+    fn id_to_token(&self, id: u64) -> Option<String> {
         match self {
             Self::WordLevel(t) => t.id_to_token(id),
             Self::WordPiece(t) => t.id_to_token(id),
@@ -103,7 +103,7 @@ impl Model for ModelWrapper {
         }
     }
 
-    fn get_vocab(&self) -> HashMap<String, u32> {
+    fn get_vocab(&self) -> HashMap<String, u64> {
         match self {
             Self::WordLevel(t) => t.get_vocab(),
             Self::WordPiece(t) => t.get_vocab(),
@@ -216,7 +216,7 @@ mod tests {
 
     #[test]
     fn incomplete_ordered_vocab() {
-        let vocab_r: HashMap<u32, String> =
+        let vocab_r: HashMap<u64, String> =
             HashMap::from([(0, "Hi".to_string()), (2, "There".to_string())]);
 
         let ordered = OrderedVocabIter::new(&vocab_r);

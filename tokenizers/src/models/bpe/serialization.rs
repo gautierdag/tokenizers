@@ -23,7 +23,7 @@ impl Serialize for BPE {
         model.serialize_field("byte_fallback", &self.byte_fallback)?;
 
         // Then the large ones
-        let mut merges: Vec<(&Pair, &u32)> = self
+        let mut merges: Vec<(&Pair, &u64)> = self
             .merges
             .iter()
             .map(|(pair, (rank, _))| (pair, rank))
@@ -78,7 +78,7 @@ impl<'de> Visitor<'de> for BPEVisitor {
         V: MapAccess<'de>,
     {
         let mut builder = BpeBuilder::new();
-        let mut vocab: Option<HashMap<String, u32>> = None;
+        let mut vocab: Option<HashMap<String, u64>> = None;
         let mut merges: Option<Vec<String>> = None;
         while let Some(key) = map.next_key::<String>()? {
             match key.as_ref() {

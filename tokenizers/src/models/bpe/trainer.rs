@@ -11,7 +11,7 @@ use std::collections::{BinaryHeap, HashMap, HashSet};
 #[derive(Debug, Eq)]
 struct Merge {
     pair: Pair,
-    count: u32,
+    count: u64,
     pos: HashSet<usize>,
 }
 impl PartialEq for Merge {
@@ -36,7 +36,7 @@ impl Ord for Merge {
 }
 
 struct Config {
-    min_frequency: u32,
+    min_frequency: u64,
     vocab_size: usize,
     show_progress: bool,
     special_tokens: Vec<AddedToken>,
@@ -79,7 +79,7 @@ impl BpeTrainerBuilder {
 
     /// Set the expected minimum frequency
     #[must_use]
-    pub fn min_frequency(mut self, frequency: u32) -> Self {
+    pub fn min_frequency(mut self, frequency: u64) -> Self {
         self.config.min_frequency = frequency;
         self
     }
@@ -176,7 +176,7 @@ impl BpeTrainerBuilder {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Eq)]
 pub struct BpeTrainer {
     /// The minimum frequency a pair must have to produce a merge operation
-    pub min_frequency: u32,
+    pub min_frequency: u64,
     /// The target vocabulary size
     pub vocab_size: usize,
     /// Whether to show progress while training
@@ -195,7 +195,7 @@ pub struct BpeTrainer {
     /// An optional parameter to limit the max length of any single token
     pub max_token_length: Option<usize>,
 
-    words: HashMap<String, u32>,
+    words: HashMap<String, u64>,
 }
 
 impl Default for BpeTrainer {
@@ -205,7 +205,7 @@ impl Default for BpeTrainer {
 }
 
 impl BpeTrainer {
-    pub fn new(min_frequency: u32, vocab_size: usize) -> Self {
+    pub fn new(min_frequency: u64, vocab_size: usize) -> Self {
         Self {
             min_frequency,
             vocab_size,
@@ -251,11 +251,11 @@ impl BpeTrainer {
     }
 
     /// Add the provided special tokens to the initial vocabulary
-    fn add_special_tokens(&self, w2id: &mut HashMap<String, u32>, id2w: &mut Vec<String>) {
+    fn add_special_tokens(&self, w2id: &mut HashMap<String, u64>, id2w: &mut Vec<String>) {
         for token in &self.special_tokens {
             if !w2id.contains_key(&token.content) {
                 id2w.push(token.content.to_owned());
-                w2id.insert(token.content.to_owned(), (id2w.len() - 1) as u32);
+                w2id.insert(token.content.to_owned(), (id2w.len() - 1) as u64);
             }
         }
     }
@@ -263,8 +263,8 @@ impl BpeTrainer {
     /// Compute the initial alphabet and limit it if relevant
     fn compute_alphabet(
         &self,
-        wc: &HashMap<String, u32>,
-        w2id: &mut HashMap<String, u32>,
+        wc: &HashMap<String, u64>,
+        w2id: &mut HashMap<String, u64>,
         id2w: &mut Vec<String>,
     ) {
         // Compute the alphabet from seen words
@@ -309,12 +309,12 @@ impl BpeTrainer {
         }
 
         // Keep the initial alphabet (sorted for determinism)
-        kept.sort_unstable_by_key(|k| (*k.0) as u32);
+        kept.sort_unstable_by_key(|k| (*k.0) as u64);
         kept.into_iter().for_each(|(c, _)| {
             let s = c.to_string();
             if !w2id.contains_key(&s) {
                 id2w.push(s.clone());
-                w2id.insert(s, (id2w.len() - 1) as u32);
+                w2id.insert(s, (id2w.len() - 1) as u64);
             }
         });
     }
@@ -322,13 +322,13 @@ impl BpeTrainer {
     /// Tokenize words and add subwords to the vocabulary when relevant
     fn tokenize_words(
         &self,
-        wc: &HashMap<String, u32>,
-        w2id: &mut HashMap<String, u32>,
+        wc: &HashMap<String, u64>,
+        w2id: &mut HashMap<String, u64>,
         id2w: &mut Vec<String>,
         p: &Option<ProgressBar>,
-    ) -> (Vec<Word>, Vec<u32>) {
+    ) -> (Vec<Word>, Vec<u64>) {
         let mut words: Vec<Word> = Vec::with_capacity(wc.len());
-        let mut counts: Vec<u32> = Vec::with_capacity(wc.len());
+        let mut counts: Vec<u64> = Vec::with_capacity(wc.len());
 
         for (word, count) in wc {
             let mut current_word = Word::new();
@@ -355,7 +355,7 @@ impl BpeTrainer {
                     // Insert the new formed string if necessary
                     if !w2id.contains_key(&s) {
                         id2w.push(s.clone());
-                        w2id.insert(s.clone(), (id2w.len() - 1) as u32);
+                        w2id.insert(s.clone(), (id2w.len() - 1) as u64);
                     }
                     current_word.add(w2id[&s], 1); // We do not care about the len here
                 }
@@ -373,7 +373,7 @@ impl BpeTrainer {
     fn count_pairs(
         &self,
         words: &[Word],
-        counts: &[u32],
+        counts: &[u64],
         p: &Option<ProgressBar>,
     ) -> (HashMap<Pair, i32>, HashMap<Pair, HashSet<usize>>) {
         words
@@ -431,10 +431,10 @@ impl BpeTrainer {
 
     pub fn do_train(
         &self,
-        word_counts: &HashMap<String, u32>,
+        word_counts: &HashMap<String, u64>,
         model: &mut BPE,
     ) -> Result<Vec<AddedToken>> {
-        let mut word_to_id: HashMap<String, u32> = HashMap::with_capacity(self.vocab_size);
+        let mut word_to_id: HashMap<String, u64> = HashMap::with_capacity(self.vocab_size);
         let mut id_to_word: Vec<String> = Vec::with_capacity(self.vocab_size);
         let max_token_length: usize = self.max_token_length.unwrap_or(usize::MAX);
 
@@ -470,7 +470,7 @@ impl BpeTrainer {
             if count > 0 {
                 queue.push(Merge {
                     pair,
-                    count: count as u32,
+                    count: count as u64,
                     pos,
                 });
             }
@@ -481,7 +481,7 @@ impl BpeTrainer {
         // 5. Do merges
         //
         self.update_progress(&progress, self.vocab_size, "Compute merges");
-        let mut merges: Vec<(Pair, u32)> = vec![];
+        let mut merges: Vec<(Pair, u64)> = vec![];
         loop {
             // Stop as soon as we have a big enough vocabulary
             if word_to_id.len() >= self.vocab_size {
@@ -493,8 +493,8 @@ impl BpeTrainer {
             }
 
             let mut top = queue.pop().unwrap();
-            if top.count != pair_counts[&top.pair] as u32 {
-                top.count = pair_counts[&top.pair] as u32;
+            if top.count != pair_counts[&top.pair] as u64 {
+                top.count = pair_counts[&top.pair] as u64;
                 queue.push(top);
                 continue;
             }
@@ -522,7 +522,7 @@ impl BpeTrainer {
             let new_token_id = word_to_id
                 .get(&new_token)
                 .copied()
-                .unwrap_or(id_to_word.len() as u32);
+                .unwrap_or(id_to_word.len() as u64);
             if word_to_id.get(&new_token).is_none() {
                 id_to_word.push(new_token.clone());
                 word_to_id.insert(new_token.clone(), new_token_id);
@@ -572,7 +572,7 @@ impl BpeTrainer {
                 if count > 0 {
                     queue.push(Merge {
                         pair,
-                        count: count as u32,
+                        count: count as u64,
                         pos,
                     });
                 }
@@ -594,7 +594,7 @@ impl BpeTrainer {
         model.merges = merges
             .into_iter()
             .enumerate()
-            .map(|(i, (pair, new_token_id))| (pair, (i as u32, new_token_id)))
+            .map(|(i, (pair, new_token_id))| (pair, (i as u64, new_token_id)))
             .collect();
 
         if let Some(prefix) = &self.continuing_subword_prefix {
@@ -631,7 +631,7 @@ impl Trainer for BpeTrainer {
         S: AsRef<str> + Send,
         F: Fn(&str) -> Result<Vec<String>> + Sync,
     {
-        let words: Result<HashMap<String, u32>> = iterator
+        let words: Result<HashMap<String, u64>> = iterator
             .maybe_par_bridge()
             .map(|sequence| {
                 let words = process(sequence.as_ref())?;
@@ -664,7 +664,7 @@ mod tests {
 
     #[test]
     fn test_train() {
-        let word_counts: HashMap<String, u32> = [
+        let word_counts: HashMap<String, u64> = [
             ("roses".into(), 1),
             ("are".into(), 2),
             ("red".into(), 1),
@@ -689,7 +689,7 @@ mod tests {
 
         // Vocab should contain all of the characters from the `word_counts` mapping
         // as well as three merges: 're', 'are', and 'is'.
-        let expected_vocab: HashMap<String, u32> = [
+        let expected_vocab: HashMap<String, u64> = [
             ("-".into(), 0),
             ("2".into(), 1),
             ("B".into(), 2),
@@ -725,7 +725,7 @@ mod tests {
         // where 'rank' determines the order in which this merge will be applied during
         // tokenization, and 'id' is the vocab id of the symbol resulting from merging
         // the pair of symbols in the corresponding key.
-        let expected_merges: HashMap<Pair, (u32, u32)> = [
+        let expected_merges: HashMap<Pair, (u64, u64)> = [
             ((17, 11), (0, 22)), // 'r' + 'e'  -> 're'
             ((8, 22), (1, 23)),  // 'a' + 're' -> 'are'
             ((13, 18), (2, 24)), // 'i' + 's'  -> 'is'
@@ -743,7 +743,7 @@ mod tests {
          */
 
         let max_token_length = 16;
-        let long_word_counts: HashMap<String, u32> = [
+        let long_word_counts: HashMap<String, u64> = [
             ("singlelongtokenwithoutcasechange", 2),
             ("singleLongTokenWithCamelCaseChange", 2),
             ("Longsingletokenwithpunctu@t!onwithin", 2),
@@ -783,7 +783,7 @@ mod tests {
         // directly compares tokens with known expected values.
         // maybe unstable depending on specific settings or changes.
          */
-        let long_word_counts: HashMap<String, u32> = [
+        let long_word_counts: HashMap<String, u64> = [
             ("sin", 2),
             ("Sin", 2),
             ("Lon", 2),
@@ -807,8 +807,8 @@ mod tests {
             .build();
         let mut model = BPE::default();
         trainer.do_train(&long_word_counts, &mut model).unwrap();
-        let trained_vocab: HashMap<String, u32> = model.get_vocab();
-        let expected_vocab: HashMap<String, u32> = [
+        let trained_vocab: HashMap<String, u64> = model.get_vocab();
+        let expected_vocab: HashMap<String, u64> = [
             ("短", 12),
             ("n", 6),
             ("i", 5),

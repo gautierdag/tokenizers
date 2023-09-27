@@ -6,8 +6,8 @@ use std::iter::FromIterator;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 #[serde(tag = "type")]
 pub struct BertProcessing {
-    sep: (String, u32),
-    cls: (String, u32),
+    sep: (String, u64),
+    cls: (String, u64),
 }
 
 impl Default for BertProcessing {
@@ -20,7 +20,7 @@ impl Default for BertProcessing {
 }
 
 impl BertProcessing {
-    pub fn new(sep: (String, u32), cls: (String, u32)) -> Self {
+    pub fn new(sep: (String, u64), cls: (String, u64)) -> Self {
         Self { sep, cls }
     }
 }
@@ -65,7 +65,7 @@ impl PostProcessor for BertProcessing {
                     let words = [&[None], encoding.get_word_ids(), &[None]].concat();
                     let offsets = [&[(0, 0)], encoding.get_offsets(), &[(0, 0)]].concat();
                     let special_tokens =
-                        [&[1u32], &vec![0; encoding.get_ids().len()][..], &[1]].concat();
+                        [&[1u64], &vec![0; encoding.get_ids().len()][..], &[1]].concat();
                     let attention_mask = vec![1; ids.len()];
 
                     // For compatibility with `TemplateProcessing`, the sequence_ranges shouldn't contain
@@ -96,7 +96,7 @@ impl PostProcessor for BertProcessing {
                                 let offsets =
                                     [&[(0, 0)], encoding.get_offsets(), &[(0, 0)]].concat();
                                 let special_tokens =
-                                    [&[1u32], &vec![0; encoding.get_ids().len()][..], &[1]]
+                                    [&[1u64], &vec![0; encoding.get_ids().len()][..], &[1]]
                                         .concat();
                                 let attention_mask = vec![1; ids.len()];
 
@@ -126,7 +126,7 @@ impl PostProcessor for BertProcessing {
                     let pair_words = [encoding.get_word_ids(), &[None]].concat();
                     let pair_offsets = [encoding.get_offsets(), &[(0, 0)]].concat();
                     let pair_special_tokens =
-                        [&vec![0u32; encoding.get_type_ids().len()][..], &[1]].concat();
+                        [&vec![0u64; encoding.get_type_ids().len()][..], &[1]].concat();
                     let pair_attention_mask = vec![1; pair_ids.len()];
 
                     // For compatibility with `TemplateProcessing`, the sequence_ranges shouldn't contain
@@ -151,7 +151,7 @@ impl PostProcessor for BertProcessing {
                                 let pair_words = [encoding.get_word_ids(), &[None]].concat();
                                 let pair_offsets = [encoding.get_offsets(), &[(0, 0)]].concat();
                                 let pair_special_tokens =
-                                    [&vec![0u32; encoding.get_type_ids().len()][..], &[1]].concat();
+                                    [&vec![0u64; encoding.get_type_ids().len()][..], &[1]].concat();
                                 let pair_attention_mask = vec![1; pair_ids.len()];
 
                                 // For compatibility with `TemplateProcessing`, the sequence_ranges

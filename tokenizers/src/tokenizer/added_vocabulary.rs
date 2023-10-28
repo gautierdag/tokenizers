@@ -2,7 +2,7 @@ use super::{
     normalizer::Range, Model, NormalizedString, Normalizer, Offsets, PreTokenizedString, Token,
 };
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder, MatchKind};
-use regex::Regex;
+use fancy_regex::Regex;
 use serde::{ser::SerializeSeq, Deserialize, Serialize, Serializer};
 use std::collections::{HashMap, HashSet};
 
@@ -102,22 +102,22 @@ lazy_static! {
 }
 
 fn ends_with_word(sentence: &str) -> bool {
-    ENDS_WITH_WORD.is_match(sentence)
+    ENDS_WITH_WORD.is_match(sentence).unwrap()
 }
 
 fn starts_with_word(sentence: &str) -> bool {
-    STARTS_WITH_WORD.is_match(sentence)
+    STARTS_WITH_WORD.is_match(sentence).unwrap()
 }
 
 fn space_leftmost_at_end(sentence: &str) -> usize {
-    if let Some(match_) = LEFTMOST_SPACE_AT_END.find(sentence) {
+    if let Ok(Some(match_)) = LEFTMOST_SPACE_AT_END.find(sentence) {
         match_.start()
     } else {
         sentence.len()
     }
 }
 fn space_rightmost_at_start(sentence: &str) -> usize {
-    if let Some(match_) = RIGHTMOST_SPACE_AT_START.find(sentence) {
+    if let Ok(Some(match_)) = RIGHTMOST_SPACE_AT_START.find(sentence) {
         match_.end()
     } else {
         0

@@ -1,6 +1,6 @@
 use crate::utils::SysRegex;
 use crate::{Offsets, Result};
-use regex::Regex;
+use fancy_regex::Regex;
 
 /// Pattern used to split a NormalizedString
 pub trait Pattern {
@@ -47,11 +47,12 @@ impl Pattern for &Regex {
         let mut prev = 0;
         let mut splits = Vec::with_capacity(inside.len());
         for m in self.find_iter(inside) {
-            if prev != m.start() {
-                splits.push(((prev, m.start()), false));
+            let matched = m?;
+            if prev != matched.start() {
+                splits.push(((prev, matched.start()), false));
             }
-            splits.push(((m.start(), m.end()), true));
-            prev = m.end();
+            splits.push(((matched.start(), matched.end()), true));
+            prev = matched.end();
         }
         if prev != inside.len() {
             splits.push(((prev, inside.len()), false))
@@ -68,12 +69,35 @@ impl Pattern for &SysRegex {
 
         let mut prev = 0;
         let mut splits = Vec::with_capacity(inside.len());
-        for (start, end) in self.find_iter(inside) {
-            if prev != start {
-                splits.push(((prev, start), false));
+        // for (start, end) in self.find_iter(inside) {
+        //     if prev != start {
+        //         splits.push(((prev, start), false));
+        //     }
+        //     splits.push(((start, end), true));
+        //     prev = end;
+        // }
+        // if prev != inside.len() {
+        //     splits.push(((prev, inside.len()), false))
+        // }
+        // Ok(splits)
+
+        for result in self.find_iter(inside) {
+            match result {
+                Ok(matched) => {
+                    let start = matched.start();
+                    let end = matched.end();
+        
+                    if prev != start {
+                        splits.push(((prev, start), false));
+                    }
+                    splits.push(((start, end), true));
+                    prev = end;
+                },
+                Err(_) => {
+                    // Handle the error or continue to the next iteration
+                    continue;
+                }
             }
-            splits.push(((start, end), true));
-            prev = end;
         }
         if prev != inside.len() {
             splits.push(((prev, inside.len()), false))
@@ -140,7 +164,7 @@ impl<P: Pattern> Pattern for Invert<P> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use regex::Regex;
+    use fancy_regex::Regex;
 
     macro_rules! do_test {
         ($inside: expr, $pattern: expr => @ERROR) => {

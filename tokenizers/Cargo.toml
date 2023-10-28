@@ -66,18 +66,18 @@ aho-corasick = "0.7"
 paste = "1.0.6"
 macro_rules_attribute = "0.1.2"
 thiserror = "1.0.30"
-fancy-regex = { version = "0.10", optional = true}
+fancy-regex = {version = "0.10", optional = true}
 getrandom = { version = "0.2.6" }
 esaxx-rs = { version = "0.1", default-features = false, features=[]}
 monostate = "0.1.5"
 
 [features]
-default = ["progressbar", "cli", "onig", "esaxx_fast"]
+default = ["progressbar", "cli", "onig", "esaxx_fast", "fancy-regex"]
 esaxx_fast = ["esaxx-rs/cpp"]
 progressbar = ["indicatif"]
 http = ["hf-hub"]
 cli = ["clap"]
-unstable_wasm = ["fancy-regex", "getrandom/js"]
+unstable_wasm = ["getrandom/js"]
 
 [dev-dependencies]
 criterion = "0.4"

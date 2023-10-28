@@ -944,7 +944,7 @@ impl From<&str> for NormalizedString {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use regex::Regex;
+    use fancy_regex::Regex;
     use unicode_categories::UnicodeCategories;
 
     #[test]

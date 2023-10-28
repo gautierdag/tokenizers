@@ -17,14 +17,14 @@ env_logger = "0.7.1"
 pyo3 = { version = "0.19" }
 numpy = "0.19.0"
 ndarray = "0.13"
-onig = { version = "6.0", default-features = false }
+fancy-regex = "0.10"
 itertools = "0.9"
 
 [dependencies.tokenizers]
 version = "0.14.1-dev.0"
 path = "../../tokenizers"
 default-features = false
-features = ["onig"]
+features = ["fancy-regex"]
 
 [dev-dependencies]
 tempfile = "3.1"
